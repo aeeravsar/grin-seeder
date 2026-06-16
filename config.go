@@ -31,6 +31,7 @@ type NodeConfig struct {
 	Interval     int      `toml:"interval"`
 	P2PPort      int      `toml:"p2p_port"`
 	CheckTimeout int      `toml:"check_timeout"`
+	MinUserAgent string   `toml:"min_user_agent"`
 }
 
 func loadConfig(path string) (*Config, error) {
@@ -83,6 +84,11 @@ func (cfg *Config) validate() error {
 	}
 	if cfg.Node.CheckTimeout < 0 {
 		return fmt.Errorf("node.check_timeout must not be negative")
+	}
+	if cfg.Node.MinUserAgent != "" {
+		if _, _, _, ok := parseMWGrinUserAgent(cfg.Node.MinUserAgent); !ok {
+			return fmt.Errorf("node.min_user_agent must look like \"MW/Grin 5.4.0\"")
+		}
 	}
 	if cfg.Node.Mode == "dynamic" {
 		if cfg.Node.URL == "" {

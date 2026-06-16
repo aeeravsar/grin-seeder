@@ -36,6 +36,7 @@ secret      = "/home/user/.grin/main/.api_secret"
 interval    = 60
 p2p_port    = 3414
 check_timeout = 3
+min_user_agent = "MW/Grin 5.4.0"
 ```
 Run grin-seeder (sudo for port 53):
 ```

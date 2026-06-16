@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,7 +23,8 @@ type rpcRequest struct {
 }
 
 type peerInfo struct {
-	Addr string `json:"addr"`
+	Addr      string `json:"addr"`
+	UserAgent string `json:"user_agent"`
 }
 
 type peerResponse struct {
@@ -117,6 +119,9 @@ func connectedPeerIPs(cfg *NodeConfig) ([]string, bool) {
 
 	var ips []string
 	for _, p := range pr.Result.Ok {
+		if !userAgentAllowed(p.UserAgent, cfg.MinUserAgent) {
+			continue
+		}
 		host, _, err := net.SplitHostPort(p.Addr)
 		if err == nil && net.ParseIP(host).To4() != nil {
 			ips = append(ips, host)
@@ -159,4 +164,54 @@ func canDialPeer(ip string, port int, timeout time.Duration) bool {
 	}
 	conn.Close()
 	return true
+}
+
+func userAgentAllowed(userAgent, minimum string) bool {
+	if minimum == "" {
+		return true
+	}
+
+	major, minor, patch, ok := parseMWGrinUserAgent(userAgent)
+	if !ok {
+		return false
+	}
+	minMajor, minMinor, minPatch, ok := parseMWGrinUserAgent(minimum)
+	if !ok {
+		return false
+	}
+
+	if major != minMajor {
+		return major > minMajor
+	}
+	if minor != minMinor {
+		return minor > minMinor
+	}
+	return patch >= minPatch
+}
+
+func parseMWGrinUserAgent(userAgent string) (int, int, int, bool) {
+	const prefix = "MW/Grin "
+	if !strings.HasPrefix(userAgent, prefix) {
+		return 0, 0, 0, false
+	}
+
+	version := strings.TrimPrefix(userAgent, prefix)
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
+		return 0, 0, 0, false
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	return major, minor, patch, true
 }
