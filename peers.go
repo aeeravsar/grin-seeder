@@ -37,6 +37,12 @@ func (ps *PeerState) UpdateAlive(ips []string) {
 	}
 }
 
+func (ps *PeerState) Static() []net.IP {
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+	return append([]net.IP(nil), ps.static...)
+}
+
 func (ps *PeerState) Serve() []net.IP {
 	ps.mu.RLock()
 	defer ps.mu.RUnlock()

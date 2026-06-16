@@ -16,18 +16,21 @@ port        = 5301
 origin      = "seed.example.com"
 ns          = "ns1.example.com"
 email       = "hostmaster.example.com"
+max_records = 24
 
 [node]
 # mode = "dynamic" requires ` + "`url`" + ` and ` + "`secret`" + ` to receive the online peers list from the node for every ` + "`interval`" + `,
 # you can comment out ` + "`url`" + ` and ` + "`secret`" + ` if you just want to serve a static list of ` + "`peers`" + `,
-# alive_only = true only serves alive peers,
-# if it is set to false it will serve offline ` + "`peers`" + ` from the static list but will not memorize offline discovered peers.
+# alive_only = true serves only peers reachable on p2p_port, including hardcoded peers,
+# if it is set to false it will serve ` + "`peers`" + ` from the static list without checking reachability.
 mode        = "dynamic" # or "static"
 peers       = ["1.2.3.4"]
 alive_only  = true # or false
 url         = "http://127.0.0.1:3413"
 secret      = "/home/user/.grin/main/.api_secret"
 interval    = 60
+p2p_port    = 3414
+check_timeout = 3
 `
 
 func main() {
